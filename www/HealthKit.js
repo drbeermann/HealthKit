@@ -122,6 +122,8 @@ define('saveCorrelation', {required: ['correlationType', 'samples']}, function(o
 
 define('sumQuantityType', {required: ['sampleType']}, hasValidDates);
 
+define('saveMindfulMinutes');
+
 HealthKit.install = function() {
   if (!window.plugins) window.plugins = {};
   window.plugins.healthkit = new HealthKit();

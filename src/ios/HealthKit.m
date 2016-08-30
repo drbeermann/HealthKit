@@ -1617,6 +1617,37 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 }
 
 /**
+ * Save mindful minutes.
+ */
+- (void) saveMindfulMinutes:(CDVInvokedUrlCommand *)command {
+    NSDictionary *args = command.arguments[0];
+    
+    NSDate* currentDate = [NSDate date];
+    
+    double seconds = [args[HKPluginKeyValue] doubleValue];
+    NSDate* startDate = [currentDate initWithTimeIntervalSinceNow:-seconds];
+    
+    HKCategoryType *type = [HKCategoryType categoryTypeForIdentifier:HKCategoryTypeIdentifierMindfulSession];
+    
+    HKCategorySample *sample = [HKCategorySample categorySampleWithType:type value:0 startDate:startDate endDate:currentDate];
+    
+    [[HealthKit sharedHealthStore] saveObject:sample withCompletion:^(BOOL success, NSError *innerError) {
+        __block HealthKit *bSelf = self;
+        if (success) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            });
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [HealthKit triggerErrorCallbackWithMessage:innerError.localizedDescription command:command delegate:bSelf.commandDelegate];
+            });
+        }
+    }];
+
+}
+
+/**
  * Save quantity sample data
  *
  * @param command *CDVInvokedUrlCommand
