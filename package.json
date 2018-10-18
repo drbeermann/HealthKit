@@ -1,17 +1,12 @@
 {
+  "version": "0.5.6",
   "name": "com.telerik.plugins.healthkit",
-  "version": "0.5.1",
-  "description": "\n    Interact with the iOS8 HealthKit SDK\n  ",
-  "cordova": {
-    "id": "com.telerik.plugins.healthkit",
-    "platforms": [
-      "ios"
-    ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/drbeermann/HealthKit.git"
-  },
+  "cordova_name": "HealthKit",
+  "description": "Interact with the iOS HealthKit SDK.",
+  "license": "MIT",
+  "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com> (https://github.com/EddyVerbruggen)",
+  "repo": "https://github.com/Telerik-Verified-Plugins/HealthKit.git",
+  "issue": "https://github.com/Telerik-Verified-Plugins/HealthKit/issues",
   "keywords": [
     "Health",
     "HealthKit",
@@ -21,20 +16,15 @@
     "Gender",
     "Height",
     "Weight",
-    "Workout",
-    "ecosystem:cordova",
-    "cordova-ios"
+    "Workout"
+  ],
+  "platforms": [
+    "ios"
   ],
   "engines": [
     {
       "name": "cordova",
       "version": ">=3.0.0"
     }
-  ],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/drbeermann/HealthKit/issues"
-  },
-  "homepage": "https://github.com/drbeermann/HealthKit#readme"
+  ]
 }

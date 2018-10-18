@@ -1,7 +1,6 @@
 #import "HealthKit.h"
 #import "HKHealthStore+AAPLExtensions.h"
 #import "WorkoutActivityConversion.h"
-#import "Cordova/CDV.h"
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCNotLocalizedStringInspection"
@@ -186,6 +185,13 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         return type;
     }
 
+    if (@available(iOS 12.0, *)) {
+      type = [HKObjectType clinicalTypeForIdentifier:elem];
+      if (type != nil) {
+        return type;
+      }
+    }
+
     // @TODO | The fall through here is inefficient.
     // @TODO | It needs to be refactored so the same HK method isnt called twice
     return [HealthKit getHKSampleType:elem];
@@ -228,6 +234,22 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
     if ([elem isEqualToString:@"workoutType"]) {
         return [HKObjectType workoutType];
+    }
+    
+    if (@available(iOS 11.0, *)) {
+        type = [HKObjectType seriesTypeForIdentifier:elem];
+        if (type != nil) {
+            return type;
+        } else {
+            // Fallback on earlier versions
+        }
+    }
+
+    if (@available(iOS 12.0, *)) {
+      type = [HKObjectType clinicalTypeForIdentifier:elem];
+      if (type != nil) {
+        return type;
+      }
     }
 
     // leave this here for if/when apple adds other sample types
@@ -865,8 +887,8 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                 } else {
                     //@TODO formerly dispatch_async
                     dispatch_sync(dispatch_get_main_queue(), ^{
-                        NSString *errorDescritption = ((errorInner.localizedDescription == nil) ? @"no data" : errorInner.localizedDescription);
-                        [HealthKit triggerErrorCallbackWithMessage:errorDescritption command:command delegate:bSelf.commandDelegate];
+                        NSString *errorDescription = ((errorInner.localizedDescription == nil) ? @"no data" : errorInner.localizedDescription);
+                        [HealthKit triggerErrorCallbackWithMessage:errorDescription command:command delegate:bSelf.commandDelegate];
                     });
                 }
             }];
@@ -1344,6 +1366,33 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                               HKWorkout *wsample = (HKWorkout *) sample;
                                                                               [entry setValue:@(wsample.duration) forKey:@"duration"];
 
+                                                                          } else {
+
+                                                                            if (@available(iOS 12.0, *)) {
+                                                                            
+                                                                                if ([sample isKindOfClass:[HKClinicalRecord class]]) {
+                                                                                    HKClinicalRecord *clinicalRecord = (HKClinicalRecord *) sample;
+                                                                                    NSError *err = nil;
+                                                                                    NSDictionary *fhirData = [NSJSONSerialization JSONObjectWithData:clinicalRecord.FHIRResource.data options:NSJSONReadingMutableContainers error:&err];
+                                                                                    
+                                                                                    if (err != nil) {
+                                                                                        dispatch_sync(dispatch_get_main_queue(), ^{
+                                                                                            [HealthKit triggerErrorCallbackWithMessage:err.localizedDescription command:command delegate:bSelf.commandDelegate];
+                                                                                        });
+                                                                                        return;
+                                                                                    } else {
+                                                                                        NSDictionary *fhirResource = @{
+                                                                                                        @"identifier": clinicalRecord.FHIRResource.identifier,
+                                                                                                        @"sourceURL": clinicalRecord.FHIRResource.sourceURL.absoluteString,
+                                                                                                        @"displayName": clinicalRecord.displayName,
+                                                                                                        @"data": fhirData
+                                                                                                    };
+                                                                                        entry[@"FHIRResource"] = fhirResource;
+                                                                                    }
+                                                                                }
+                                                                            
+                                                                            }
+
                                                                           }
 
                                                                           [finalResults addObject:entry];
@@ -1581,7 +1630,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                     HKPluginKeySampleType: quantitySample.sampleType.identifier,
                                     HKPluginKeyValue: @([quantitySample.quantity doubleValueForUnit:unit]),
                                     HKPluginKeyUnit: unit.unitString,
-                                    HKPluginKeyMetadata: ((quantitySample.metadata != nil) ? quantitySample.metadata : @{}),
+                                    HKPluginKeyMetadata: (quantitySample.metadata == nil || ![NSJSONSerialization isValidJSONObject:quantitySample.metadata]) ? @{} : quantitySample.metadata,
                                     HKPluginKeyUUID: quantitySample.UUID.UUIDString
                             }
                             ];
@@ -1717,18 +1766,43 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 }
 
 /**
- * Delete a specified object from teh HealthKit store
- * @TODO implement me
+ * Delete matching samples from the HealthKit store.
+ * See https://developer.apple.com/library/ios/documentation/HealthKit/Reference/HKHealthStore_Class/#//apple_ref/occ/instm/HKHealthStore/deleteObject:withCompletion:
  *
  * @param command *CDVInvokedUrlCommand
  */
-- (void)deleteObject:(CDVInvokedUrlCommand *)command {
-    //NSDictionary *args = command.arguments[0];
+- (void)deleteSamples:(CDVInvokedUrlCommand *)command {
+  NSDictionary *args = command.arguments[0];
+  NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
+  NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
+  NSString *sampleTypeString = args[HKPluginKeySampleType];
 
-    // TODO see the 3 methods at https://developer.apple.com/library/ios/documentation/HealthKit/Reference/HKHealthStore_Class/#//apple_ref/occ/instm/HKHealthStore/deleteObject:withCompletion:
+  HKSampleType *type = [HealthKit getHKSampleType:sampleTypeString];
+  if (type == nil) {
+    [HealthKit triggerErrorCallbackWithMessage:@"sampleType was invalid" command:command delegate:self.commandDelegate];
+    return;
+  }
 
-    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+  NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+
+  NSSet *requestTypes = [NSSet setWithObjects:type, nil];
+  [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:requestTypes completion:^(BOOL success, NSError *error) {
+    __block HealthKit *bSelf = self;
+    if (success) {
+      [[HealthKit sharedHealthStore] deleteObjectsOfType:type predicate:predicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable deletionError) {
+        if (deletionError != nil) {
+          dispatch_sync(dispatch_get_main_queue(), ^{
+            [HealthKit triggerErrorCallbackWithMessage:deletionError.localizedDescription command:command delegate:bSelf.commandDelegate];
+          });
+        } else {
+          dispatch_sync(dispatch_get_main_queue(), ^{
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:(int)deletedObjectCount];
+            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+          });
+        }
+      }];
+    }
+  }];
 }
 
 @end

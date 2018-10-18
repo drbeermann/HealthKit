@@ -32,6 +32,7 @@
 * `saveQuantitySample`
 * `saveCorrelation`
 * `queryCorrelationType`
+* `deleteSamples`
 
 ### Resources
 
@@ -40,19 +41,42 @@
 * For functions that require the `unit` attribute, you can find the [comprehensive list of possible units from the Apple Developers documentation](https://developer.apple.com/library/ios/documentation/HealthKit/Reference/HKUnit_Class/index.html#//apple_ref/doc/uid/TP40014727-CH1-SW2).
 
 ### Tips
-* Make sure your app id has the 'HealthKit' entitlement when this plugin is installed (see iOS dev center).
+* Make sure your app id has the 'HealthKit' entitlement when this plugin is installed. This is added automatically to your app if you use cordova-ios 4.3.0 or higher.
 * Also, make sure your app and AppStore description complies with these Apple review guidelines: https://developer.apple.com/app-store/review/guidelines/#healthkit
 
 ### Installation
 
 Using the Cordova CLI?
 
+```bash
+cordova plugin add com.telerik.plugins.healthkit --variable HEALTH_READ_PERMISSION='App needs read access' --variable HEALTH_WRITE_PERMISSION='App needs write access'
 ```
-cordova plugin add com.telerik.plugins.healthkit
-```
+`HEALTH_READ_PERMISSION` and `HEALTH_WRITE_PERMISSION` are shown when your app asks for access to data in HealthKit.
 
-Using PhoneGap Build?
+#### Using PhoneGap Build?
 
 ```xml
 <plugin name="com.telerik.plugins.healthkit" source="npm" />
+
+<!-- Read access -->
+<config-file platform="ios" parent="NSHealthShareUsageDescription">
+  <string>App needs read access</string>
+</config-file>
+<!-- Write access -->
+<config-file platform="ios" parent="NSHealthUpdateUsageDescription">
+  <string>App needs write access</string>
+</config-file>
 ```
+#### Using PhoneGap Build - cli-7 or superior?
+
+PhoneGap Build has [recently migrated](https://blog.phonegap.com/phonegap-7-0-1-now-on-build-and-it-includes-some-important-changes-89087fe465f5) from the custom build process to the standard Cordova build process. If you are already running on the new builder, it is no longer necessary to add the variables differently, and the variables must be defined as in the Cordova case.
+
+```xml
+<platform name="ios">
+    <plugin name="com.telerik.plugins.healthkit" spec="^0.5.5" >
+        <variable name="HEALTH_READ_PERMISSION" value="App needs read access" />
+        <variable name="HEALTH_WRITE_PERMISSION" value="App needs write access" />
+    </plugin>        
+</platform>
+```
+
