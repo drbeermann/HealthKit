@@ -5,7 +5,7 @@
   "description": "Interact with the iOS HealthKit SDK.",
   "license": "MIT",
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com> (https://github.com/EddyVerbruggen)",
-  "repo": "https://github.com/Telerik-Verified-Plugins/HealthKit.git",
+  "repo": "https://github.com/drbeermann/HealthKit.git",
   "issue": "https://github.com/Telerik-Verified-Plugins/HealthKit/issues",
   "keywords": [
     "Health",
