@@ -1,5 +1,5 @@
 {
-  "version": "0.5.6.1",
+  "version": "0.5.6",
   "name": "com.telerik.plugins.healthkit",
   "cordova_name": "HealthKit",
   "description": "Interact with the iOS HealthKit SDK.",
@@ -26,5 +26,19 @@
       "name": "cordova",
       "version": ">=3.0.0"
     }
-  ]
+  ],
+  "cordova": {
+    "id": "com.telerik.plugins.healthkit",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drbeermann/HealthKit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/drbeermann/HealthKit/issues"
+  },
+  "homepage": "https://github.com/drbeermann/HealthKit#readme"
 }
