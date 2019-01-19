@@ -32,10 +32,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pacifica-app/HealthKit"
+    "url": "https://github.com/pacifica-app/healthkit"
   },
   "bugs": {
-    "url": "https://github.com/pacifica-app/HealthKit/issues"
+    "url": "https://github.com/pacifica-app/healthkit/issues"
   },
-  "homepage": "https://github.com/pacifica-app/HealthKit#readme"
+  "homepage": "https://github.com/pacifica-app/healthkit#readme"
 }
