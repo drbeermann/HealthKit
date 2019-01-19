@@ -5,7 +5,7 @@
   "description": "Interact with the iOS HealthKit SDK.",
   "license": "MIT",
   "author": "Telerik / Eddy Verbruggen <eddyverbruggen@gmail.com> (https://github.com/EddyVerbruggen)",
-  "repo": "https://github.com/pacifica-app/HealthKit.git",
+  "repo": "https://github.com/pacifica-app/HealthKit",
   "issue": "https://github.com/Telerik-Verified-Plugins/HealthKit/issues",
   "keywords": [
     "Health",
@@ -38,7 +38,7 @@
     "url": "https://github.com/pacifica-app/HealthKit"
   },
   "bugs": {
-    "url": "https://github.com/pacifica-app/pacifica-app/issues"
+    "url": "https://github.com/pacifica-app/HealthKit/issues"
   },
   "homepage": "https://github.com/pacifica-app/HealthKit#readme"
 }
